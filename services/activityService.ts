@@ -24,6 +24,7 @@ export const activityService = {
       const endTime = new Date(startTime.getTime() + activityData.duration * 60000);
 
       const backendPayload: any = {
+        title: activityData.title,
         type: activityData.type,
         startTime: startTime.toISOString(),
         endTime: endTime.toISOString(),
@@ -34,6 +35,10 @@ export const activityService = {
 
       if (activityData.distance) {
         backendPayload.distance = activityData.distance;
+      }
+
+      if (activityData.elevationGain) {
+        backendPayload.elevationGain = activityData.elevationGain;
       }
 
       if (activityData.exercises) {
