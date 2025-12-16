@@ -87,4 +87,41 @@ const activitySchema = new mongoose.Schema({
   timestamps: true,
 });
 
+// Middleware de validation avant la sauvegarde
+activitySchema.pre('save', function (next) {
+  const allowedFieldsMap = {
+    running: ['distance', 'elevationGain', 'avgSpeed'],
+    cycling: ['distance', 'elevationGain', 'avgSpeed'],
+    walking: ['distance', 'elevationGain', 'avgSpeed'],
+    swimming: ['distance', 'poolLength', 'laps'],
+    workout: ['exercises'],
+  };
+
+  const specificFields = [
+    'distance', 'elevationGain', 'avgSpeed',
+    'poolLength', 'laps',
+    'exercises'
+  ];
+
+  const allowedFields = allowedFieldsMap[this.type];
+
+  if (!allowedFields) {
+    return next();
+  }
+
+  let error = null;
+
+  specificFields.forEach(field => {
+    if ((this[field] !== undefined && this[field] !== null && (!Array.isArray(this[field]) || this[field].length > 0)) && !allowedFields.includes(field)) {
+      error = new Error(`Le champ '${field}' n'est pas applicable pour le type '${this.type}'.`);
+    }
+  });
+
+  if (error) {
+    return next(error);
+  }
+
+  next();
+});
+
 module.exports = mongoose.model('Activity', activitySchema);
