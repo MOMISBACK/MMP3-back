@@ -19,6 +19,7 @@ export const activityService = {
     token: string,
   ): Promise<Activity> => {
     try {
+      console.log("Payload sent:", activityData);
       const response = await api.post("/activities", activityData, {
         headers: { Authorization: `Bearer ${token}` },
       });
