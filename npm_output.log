@@ -1,15 +1,40 @@
+
+> mmp@1.0.0 start
+> expo start
+
 Starting project at /app
 React Compiler enabled
 Starting Metro Bundler
 The following packages should be updated for best compatibility with the installed expo version:
   @react-native-picker/picker@2.11.4 - expected version: 2.11.1
+  expo@54.0.27 - expected version: ~54.0.29
+  expo-constants@18.0.11 - expected version: ~18.0.12
+  expo-router@6.0.17 - expected version: ~6.0.19
 Your project may not work correctly until you install the expected versions of the packages.
 Waiting on http://localhost:8081
 Logs for your project will appear below.
 Web node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
-λ Bundled 2012ms node_modules/expo-router/node/render.js (988 modules)
-λ  WARN  props.pointerEvents is deprecated. Use style.pointerEvents
-Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (856/856)
-Web Bundled 4062ms node_modules/expo-router/entry.js (856 modules)
-Web Bundled 2182ms node_modules/expo-router/entry.js (857 modules)
+Web node_modules/expo-router/entry.js ▓▓▓░░░░░░░░░░░░░ 23.9% ( 90/184)
+λ node_modules/expo-router/node/render.js ▓▓░░░░░░░░░░░░░░ 17.2% (119/287)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓░░░░░░░░ 50.7% (195/321)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 64.4% (438/546)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 63.9% (391/505)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓░░░░░ 73.5% (558/651)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 89.5% (719/760)
+λ node_modules/expo-router/node/render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 90.3% (817/915)
+λ Bundled 16319ms node_modules/expo-router/node/render.js (1132 modules)
+Web Bundled 17479ms node_modules/expo-router/entry.js (912 modules)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (912/912)
+Web node_modules/expo-router/entry.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 63.4% (539/677)
+Web Bundled 5861ms node_modules/expo-router/entry.js (913 modules)
+ LOG  [web] Logs will appear in the browser console
+Web node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+λ Bundled 55ms node_modules/expo-router/node/render.js (1 module)
+Web Bundled 481ms node_modules/expo-router/entry.js (1 module)
+Web Bundled 40ms node_modules/expo-router/entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+Web node_modules/expo-router/entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+λ Bundled 104ms node_modules/expo-router/node/render.js (1 module)
+Web Bundled 753ms node_modules/expo-router/entry.js (1 module)
+Web Bundled 143ms node_modules/expo-router/entry.js (1 module)
  LOG  [web] Logs will appear in the browser console

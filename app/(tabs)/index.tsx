@@ -25,6 +25,11 @@ export default function HomeScreen() {
         <Text style={styles.header} numberOfLines={1} ellipsizeMode="tail">
           Activités de {user ? user.email.split('@')[0] : "..."}
         </Text>
+        <Link href="/users" asChild>
+          <TouchableOpacity style={styles.settingsButton} testID="friends-button">
+            <Ionicons name="people-outline" size={24} color="#fff" />
+          </TouchableOpacity>
+        </Link>
         <Link href="/settings" asChild>
           <TouchableOpacity style={styles.settingsButton}>
             <Ionicons name="settings-outline" size={24} color="#fff" />
