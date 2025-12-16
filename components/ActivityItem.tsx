@@ -3,7 +3,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform, Pressable } from 'react-native';
 import { Activity } from '../types/Activity';
 import { Ionicons } from '@expo/vector-icons';
-import { getActivityConfig } from '../utils/activityConfig';
+import { activityConfig } from '../utils/activityConfig';
 import { Link } from 'expo-router';
 
 interface ActivityItemProps {
@@ -12,16 +12,16 @@ interface ActivityItemProps {
 }
 
 export const ActivityItem: React.FC<ActivityItemProps> = ({ activity, onDelete }) => {
-  const { icon, label } = getActivityConfig(activity.type);
+  const config = activityConfig[activity.type] || { icon: "⚪", label: "Activité" };
   const activityId = activity._id || activity.id;
 
   return (
     <Link href={`/activities/${activityId}`} asChild>
       <Pressable>
         <View style={styles.container}>
-          <Text style={styles.icon}>{icon}</Text>
+          <Text style={styles.icon}>{config.icon}</Text>
           <View style={styles.detailsContainer}>
-            <Text style={styles.title}>{label}</Text>
+            <Text style={styles.title}>{config.label}</Text>
             <Text style={styles.details}>
               {activity.duration} min
               {activity.distance ? ` - ${activity.distance} km` : ''}

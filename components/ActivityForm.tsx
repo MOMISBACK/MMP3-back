@@ -12,7 +12,7 @@ import {
 import { Picker } from "@react-native-picker/picker";
 import { Activity } from "../types/Activity";
 import { useActivities } from "../context/ActivityContext";
-import { activityTypes, ActivityTypeKey } from "../utils/activityConfig";
+import { activityConfig, ActivityTypeKey } from "../utils/activityConfig";
 
 interface ActivityFormProps {
   onClose: () => void;
@@ -31,6 +31,7 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
   const [type, setType] = useState<ActivityTypeKey>("running");
   const [duration, setDuration] = useState("");
   const [distance, setDistance] = useState("");
+  const [calories, setCalories] = useState("");
 
   // State for workout exercises
   const [exercises, setExercises] = useState<Exercise[]>([
@@ -57,17 +58,22 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
 
     setIsSubmitting(true);
     try {
+      const config = activityConfig[type];
       const activityData: Partial<Activity> = {
         type,
         duration: parseInt(duration, 10),
         date: new Date().toISOString(),
       };
 
-      if (["running", "cycling", "walking"].includes(type)) {
+      if (config.fields.includes("distance")) {
         activityData.distance = distance ? parseFloat(distance) : undefined;
       }
 
-      if (type === "workout") {
+      if (config.fields.includes("calories")) {
+        activityData.calories = calories ? parseInt(calories, 10) : undefined;
+      }
+
+      if (config.fields.includes("exercises")) {
         activityData.exercises = exercises
           .filter((ex) => ex.name)
           .map((ex) => ({
@@ -88,11 +94,10 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
   };
 
   const renderSpecificFields = () => {
-    switch (type) {
-      case "running":
-      case "cycling":
-      case "walking":
-        return (
+    const fields = activityConfig[type].fields;
+    return (
+      <>
+        {fields.includes("distance") && (
           <TextInput
             style={styles.input}
             placeholder="Distance (km)"
@@ -101,9 +106,32 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
             onChangeText={setDistance}
             keyboardType="numeric"
           />
-        );
-      case "workout":
-        return (
+        )}
+        {fields.includes("calories") && (
+          <TextInput
+            style={styles.input}
+            placeholder="Calories"
+            placeholderTextColor="#888"
+            value={calories}
+            onChangeText={setCalories}
+            keyboardType="numeric"
+          />
+        )}
+        {fields.includes("exercises") && (
+          <View>
+            <Text style={styles.subHeader}>Exercices</Text>
+            {exercises.map((exercise, index) => (
+              <View key={index} style={styles.exerciseContainer}>
+                <TextInput
+                  style={styles.input}
+            placeholder="Distance (km)"
+            placeholderTextColor="#888"
+            value={distance}
+            onChangeText={setDistance}
+            keyboardType="numeric"
+          />
+        )}
+        {fields.includes("exercises") && (
           <View>
             <Text style={styles.subHeader}>Exercices</Text>
             {exercises.map((exercise, index) => (
@@ -152,10 +180,9 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
               <Text style={styles.addButtonText}>Ajouter un exercice</Text>
             </TouchableOpacity>
           </View>
-        );
-      default:
-        return null;
-    }
+        )}
+      </>
+    );
   };
 
   return (
@@ -172,11 +199,11 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
           style={Platform.OS === "web" ? styles.pickerWeb : styles.picker}
           itemStyle={styles.pickerItem}
         >
-          {activityTypes.map((activity) => (
+          {Object.entries(activityConfig).map(([key, config]) => (
             <Picker.Item
-              key={activity.key}
-              label={`${activity.icon} ${activity.label}`}
-              value={activity.key}
+              key={key}
+              label={`${config.icon} ${config.label}`}
+              value={key}
             />
           ))}
         </Picker>

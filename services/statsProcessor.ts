@@ -1,5 +1,5 @@
 import { Activity } from "../types/Activity";
-import { activityTypes, getActivityConfig, ActivityTypeKey } from "../utils/activityConfig";
+import { activityConfig, ActivityTypeKey } from "../utils/activityConfig";
 
 export interface GlobalStats {
   totalActivities: number;
@@ -17,50 +17,45 @@ export interface GlobalStats {
 
 export const statsProcessor = {
   calculateGlobalStats: (activities: Activity[]): GlobalStats => {
-    const initialStats: Omit<GlobalStats, 'averageDuration' | 'averageDistance' | 'averageCalories'> = {
+    const initialStats = {
       totalActivities: 0,
       totalDuration: 0,
       totalDistance: 0,
       totalCalories: 0,
-      longestActivity: undefined,
+      longestActivity: undefined as Activity | undefined,
       durationByType: {} as Record<ActivityTypeKey, number>,
       distanceByType: {} as Record<ActivityTypeKey, number>,
       caloriesByType: {} as Record<ActivityTypeKey, number>,
     };
 
-    activityTypes.forEach(type => {
-      initialStats.durationByType[type.key] = 0;
-      initialStats.distanceByType[type.key] = 0;
-      initialStats.caloriesByType[type.key] = 0;
-    });
+    for (const key in activityConfig) {
+      initialStats.durationByType[key as ActivityTypeKey] = 0;
+      initialStats.distanceByType[key as ActivityTypeKey] = 0;
+      initialStats.caloriesByType[key as ActivityTypeKey] = 0;
+    }
 
     if (!activities || activities.length === 0) {
-      return {
-        ...initialStats,
-        averageDuration: 0,
-        averageDistance: 0,
-        averageCalories: 0,
-      };
+      return { ...initialStats, averageDuration: 0, averageDistance: 0, averageCalories: 0 };
     }
 
     const totals = activities.reduce((acc, activity) => {
-      const config = getActivityConfig(activity.type);
+      const config = activityConfig[activity.type];
+      if (!config) return acc;
 
-      acc.totalDuration += activity.duration || 0;
-
-      if (config.contributesTo.includes('distance')) {
+      if (config.fields.includes("duration")) {
+        acc.totalDuration += activity.duration || 0;
+        acc.durationByType[activity.type] += activity.duration || 0;
+      }
+      if (config.fields.includes("distance")) {
         acc.totalDistance += activity.distance || 0;
+        acc.distanceByType[activity.type] += activity.distance || 0;
       }
-
-      if (config.contributesTo.includes('calories')) {
+      if (config.fields.includes("calories")) {
         acc.totalCalories += activity.calories || 0;
+        acc.caloriesByType[activity.type] += activity.calories || 0;
       }
 
-      acc.durationByType[activity.type] += activity.duration || 0;
-      acc.distanceByType[activity.type] += activity.distance || 0;
-      acc.caloriesByType[activity.type] += activity.calories || 0;
-
-      if (!acc.longestActivity || activity.duration > acc.longestActivity.duration) {
+      if (!acc.longestActivity || (activity.duration || 0) > (acc.longestActivity.duration || 0)) {
         acc.longestActivity = activity;
       }
 
@@ -68,7 +63,7 @@ export const statsProcessor = {
     }, initialStats);
 
     const totalActivities = activities.length;
-    const distanceActivitiesCount = activities.filter(a => getActivityConfig(a.type).contributesTo.includes('distance')).length;
+    const distanceActivitiesCount = activities.filter(a => activityConfig[a.type]?.fields.includes("distance")).length;
 
     return {
       ...totals,
