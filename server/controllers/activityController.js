@@ -4,6 +4,7 @@ const activityService = require('../services/activityService');
  * Creates a new activity.
  */
 const createActivity = async (req, res) => {
+  console.log('Received activity data:', req.body);
   try {
     const activityData = req.body;
     // Attach user ID from the authenticated user (provided by the 'protect' middleware)
