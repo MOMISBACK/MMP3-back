@@ -12,13 +12,7 @@ import { useAuth } from "./AuthContext"; // Assuming useAuth provides user/token
 
 interface ActivityContextType {
   activities: Activity[];
-  addActivity: (
-    title: string,
-    type: Activity["type"],
-    duration: string,
-    distance?: string,
-    calories?: string,
-  ) => Promise<void>;
+  addActivity: (activityData: Omit<Activity, "id">) => Promise<void>;
   removeActivity: (id: string) => Promise<void>;
   loading: boolean;
   error: string | null;
@@ -63,43 +57,25 @@ export function ActivityProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user, loadActivities]);
 
-  const addActivity = async (
-    title: string,
-    type: Activity["type"],
-    duration: string,
-    distance?: string,
-    calories?: string,
-  ) => {
-    if (!title || !type || !duration) return;
-
-    const newActivityData = {
-      title,
-      type,
-      duration: Number(duration),
-      distance: distance ? Number(distance) : undefined,
-      calories: calories ? Number(calories) : undefined,
-    };
-
+  const addActivity = async (activityData: Omit<Activity, "id" | "_id">) => {
     if (!token) {
       setError("Vous devez être connecté pour ajouter une activité.");
       return;
     }
 
     try {
-      // Optimistic update
       const tempId = `temp-${Date.now()}`;
-      const newActivity = { ...newActivityData, id: tempId, date: new Date().toISOString() };
-      setActivities(prev => [newActivity, ...prev]);
+      const newActivity = { ...activityData, id: tempId, date: new Date().toISOString() };
+      setActivities((prev) => [newActivity, ...prev]);
 
-      const savedActivity = await activityService.addActivity(newActivityData, token);
+      const savedActivity = await activityService.addActivity(activityData, token);
 
-      // Replace temporary activity with the one from the server
-      setActivities(prev => prev.map(a => a.id === tempId ? savedActivity : a));
-
+      setActivities((prev) =>
+        prev.map((a) => (a.id === tempId ? savedActivity : a)),
+      );
     } catch (error) {
       console.error("Failed to save activity", error);
       setError("Impossible d'ajouter l'activité. Veuillez réessayer.");
-      // Rollback optimistic update
       await loadActivities();
     }
   };

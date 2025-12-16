@@ -26,15 +26,22 @@ export const activityService = {
       const startTime = new Date(activityData.date);
       const endTime = new Date(startTime.getTime() + activityData.duration * 60000);
 
-      const backendPayload = {
+      const backendPayload: any = {
         type: englishType,
         startTime: startTime.toISOString(),
         endTime: endTime.toISOString(),
         date: startTime.toISOString(),
         duration: activityData.duration,
-        source: 'manual',
-        distance: activityData.distance,
+        source: "manual",
       };
+
+      if (activityData.distance) {
+        backendPayload.distance = activityData.distance;
+      }
+
+      if (activityData.exercises) {
+        backendPayload.exercises = activityData.exercises;
+      }
 
       const response = await api.post("/activities", backendPayload, {
         headers: { Authorization: `Bearer ${token}` },

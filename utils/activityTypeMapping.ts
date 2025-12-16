@@ -1,6 +1,6 @@
 export const frenchToEnglishActivityType = (
-  type: "course" | "velo" | "natation" | "marche",
-): "running" | "cycling" | "swimming" | "walking" => {
+  type: "course" | "velo" | "natation" | "marche" | "musculation",
+): "running" | "cycling" | "swimming" | "walking" | "workout" => {
   switch (type) {
     case "course":
       return "running";
@@ -10,6 +10,8 @@ export const frenchToEnglishActivityType = (
       return "swimming";
     case "marche":
       return "walking";
+    case "musculation":
+      return "workout";
     default:
       throw new Error(`Unknown activity type: ${type}`);
   }
