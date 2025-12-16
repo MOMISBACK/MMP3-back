@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Platform,
   ActivityIndicator,
+  ScrollView,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { Activity } from "../types/Activity";
@@ -16,40 +17,148 @@ interface ActivityFormProps {
   onClose: () => void;
 }
 
+type Exercise = {
+  name: string;
+  sets?: string;
+  reps?: string;
+  weight?: string;
+};
+
 export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
   const { addActivity } = useActivities();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [title, setTitle] = useState("");
   const [type, setType] = useState<Activity["type"]>("course");
   const [duration, setDuration] = useState("");
   const [distance, setDistance] = useState("");
-  const [calories, setCalories] = useState("");
+
+  // State for workout exercises
+  const [exercises, setExercises] = useState<Exercise[]>([
+    { name: "", sets: "", reps: "", weight: "" },
+  ]);
+
+  const handleExerciseChange = (index: number, field: keyof Exercise, value: string) => {
+    const newExercises = [...exercises];
+    newExercises[index][field] = value;
+    setExercises(newExercises);
+  };
+
+  const addExercise = () => {
+    setExercises([...exercises, { name: "", sets: "", reps: "", weight: "" }]);
+  };
+
+  const removeExercise = (index: number) => {
+    const newExercises = exercises.filter((_, i) => i !== index);
+    setExercises(newExercises);
+  };
 
   const handleSubmit = async () => {
-    if (!title || !duration || isSubmitting) return;
+    if (!duration || isSubmitting) return;
 
     setIsSubmitting(true);
     try {
-      await addActivity(title, type, duration, distance, calories);
-      onClose(); // Close the modal on success
+      const activityData: Partial<Activity> = {
+        type,
+        duration: parseInt(duration, 10),
+        date: new Date().toISOString(), // Add current date
+      };
+
+      if (["course", "velo", "marche"].includes(type)) {
+        activityData.distance = distance ? parseFloat(distance) : undefined;
+      }
+
+      if (type === "musculation") {
+        activityData.exercises = exercises
+          .filter((ex) => ex.name) // Filter out empty exercises
+          .map((ex) => ({
+            name: ex.name,
+            sets: ex.sets ? parseInt(ex.sets, 10) : undefined,
+            reps: ex.reps ? parseInt(ex.reps, 10) : undefined,
+            weight: ex.weight ? parseFloat(ex.weight) : undefined,
+          }));
+      }
+
+      await addActivity(activityData as Omit<Activity, "id">);
+      onClose();
     } catch (error) {
       console.error("Failed to add activity:", error);
-      // Error will be displayed by the context
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const renderSpecificFields = () => {
+    switch (type) {
+      case "course":
+      case "velo":
+      case "marche":
+        return (
+          <TextInput
+            style={styles.input}
+            placeholder="Distance (km)"
+            placeholderTextColor="#888"
+            value={distance}
+            onChangeText={setDistance}
+            keyboardType="numeric"
+          />
+        );
+      case "musculation":
+        return (
+          <View>
+            <Text style={styles.subHeader}>Exercices</Text>
+            {exercises.map((exercise, index) => (
+              <View key={index} style={styles.exerciseContainer}>
+                <TextInput
+                  style={styles.input}
+                  placeholder={`Exercice ${index + 1}`}
+                  placeholderTextColor="#888"
+                  value={exercise.name}
+                  onChangeText={(value) => handleExerciseChange(index, "name", value)}
+                />
+                <View style={styles.exerciseRow}>
+                  <TextInput
+                    style={[styles.input, styles.exerciseInput]}
+                    placeholder="Séries"
+                    placeholderTextColor="#888"
+                    value={exercise.sets}
+                    onChangeText={(value) => handleExerciseChange(index, "sets", value)}
+                    keyboardType="numeric"
+                  />
+                  <TextInput
+                    style={[styles.input, styles.exerciseInput]}
+                    placeholder="Rép."
+                    placeholderTextColor="#888"
+                    value={exercise.reps}
+                    onChangeText={(value) => handleExerciseChange(index, "reps", value)}
+                    keyboardType="numeric"
+                  />
+                  <TextInput
+                    style={[styles.input, styles.exerciseInput]}
+                    placeholder="Poids (kg)"
+                    placeholderTextColor="#888"
+                    value={exercise.weight}
+                    onChangeText={(value) => handleExerciseChange(index, "weight", value)}
+                    keyboardType="numeric"
+                  />
+                </View>
+                {exercises.length > 1 && (
+                  <TouchableOpacity onPress={() => removeExercise(index)} style={styles.removeButton}>
+                    <Text style={styles.removeButtonText}>Supprimer</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            ))}
+            <TouchableOpacity onPress={addExercise} style={styles.addButton}>
+              <Text style={styles.addButtonText}>Ajouter un exercice</Text>
+            </TouchableOpacity>
+          </View>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
-    <View style={styles.container}>
-      <TextInput
-        style={styles.input}
-        placeholder="Titre (ex: Sortie du matin)"
-        placeholderTextColor="#888"
-        value={title}
-        onChangeText={setTitle}
-        testID="title-input"
-      />
+    <ScrollView style={styles.container}>
       <View
         style={[
           styles.pickerContainer,
@@ -66,6 +175,7 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
           <Picker.Item label="Vélo" value="velo" />
           <Picker.Item label="Natation" value="natation" />
           <Picker.Item label="Marche" value="marche" />
+          <Picker.Item label="Musculation" value="musculation" />
         </Picker>
       </View>
       <TextInput
@@ -75,26 +185,8 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
         value={duration}
         onChangeText={setDuration}
         keyboardType="numeric"
-        testID="duration-input"
       />
-      <TextInput
-        style={styles.input}
-        placeholder="Distance (km)"
-        placeholderTextColor="#888"
-        value={distance}
-        onChangeText={setDistance}
-        keyboardType="numeric"
-        testID="distance-input"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Calories"
-        placeholderTextColor="#888"
-        value={calories}
-        onChangeText={setCalories}
-        keyboardType="numeric"
-        testID="calories-input"
-      />
+      {renderSpecificFields()}
       <View style={styles.buttonRow}>
         <TouchableOpacity
           style={[styles.buttonContainer, styles.cancelButton]}
@@ -106,19 +198,23 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
         <TouchableOpacity
           style={[styles.buttonContainer, isSubmitting && styles.buttonDisabled]}
           onPress={handleSubmit}
-          testID="add-activity-button"
           disabled={isSubmitting}
         >
-          {isSubmitting ? <ActivityIndicator color="#111" /> : <Text style={styles.buttonText}>AJOUTER</Text>}
+          {isSubmitting ? (
+            <ActivityIndicator color="#111" />
+          ) : (
+            <Text style={styles.buttonText}>AJOUTER</Text>
+          )}
         </TouchableOpacity>
       </View>
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "transparent",
+    paddingBottom: 20,
   },
   input: {
     height: 50,
@@ -177,5 +273,40 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     color: "#fff",
+  },
+  subHeader: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#fff",
+    marginBottom: 10,
+  },
+  exerciseContainer: {
+    marginBottom: 15,
+  },
+  exerciseRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  exerciseInput: {
+    flex: 1,
+    marginRight: 5,
+  },
+  removeButton: {
+    marginTop: 5,
+  },
+  removeButtonText: {
+    color: "#ff4d4d",
+    textAlign: "right",
+  },
+  addButton: {
+    backgroundColor: "#444",
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  addButtonText: {
+    color: "#fff",
+    fontSize: 16,
   },
 });
