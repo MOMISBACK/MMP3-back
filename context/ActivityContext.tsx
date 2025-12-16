@@ -64,19 +64,11 @@ export function ActivityProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      const tempId = `temp-${Date.now()}`;
-      const newActivity = { ...activityData, id: tempId, date: new Date().toISOString() };
-      setActivities((prev) => [newActivity, ...prev]);
-
-      const savedActivity = await activityService.addActivity(activityData, token);
-
-      setActivities((prev) =>
-        prev.map((a) => (a.id === tempId ? savedActivity : a)),
-      );
+      await activityService.addActivity(activityData, token);
+      await loadActivities(); // Re-fetch all activities to ensure consistency
     } catch (error) {
       console.error("Failed to save activity", error);
       setError("Impossible d'ajouter l'activité. Veuillez réessayer.");
-      await loadActivities();
     }
   };
 
