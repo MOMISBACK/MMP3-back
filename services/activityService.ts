@@ -49,7 +49,11 @@ export const activityService = {
       const errorMessage = axiosError.response?.data?.message || "An unknown error occurred";
       console.error("Failed to save activity:", errorMessage);
       if (axiosError.response) {
-        console.error("Full error response:", JSON.stringify(axiosError.response.data, null, 2));
+        if (typeof axiosError.response.data === 'object' && axiosError.response.data !== null) {
+          console.error("Full error response:", JSON.stringify(axiosError.response.data, null, 2));
+        } else {
+          console.error("Full error response:", axiosError.response.data);
+        }
       }
       throw new Error(`Échec de l'enregistrement de l'activité: ${errorMessage}`);
     }
