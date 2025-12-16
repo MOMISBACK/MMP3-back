@@ -3,6 +3,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform } from 'react-native';
 import { Activity } from '../types/Activity';
 import { Ionicons } from '@expo/vector-icons';
+import { getActivityLabel } from '../utils/activityDisplay';
 
 interface ActivityItemProps {
   activity: Activity;
@@ -14,6 +15,7 @@ const activityIcons: Record<Activity['type'], React.ComponentProps<typeof Ionico
   velo: 'bicycle',
   natation: 'water',
   marche: 'walk-outline',
+  musculation: 'barbell',
 };
 
 export const ActivityItem: React.FC<ActivityItemProps> = ({ activity, onDelete }) => {
@@ -21,7 +23,7 @@ export const ActivityItem: React.FC<ActivityItemProps> = ({ activity, onDelete }
     <View style={styles.container}>
       <Ionicons name={activityIcons[activity.type]} size={24} color="#ffd700" style={styles.icon} />
       <View style={styles.detailsContainer}>
-        <Text style={styles.title}>{activity.title}</Text>
+        <Text style={styles.title}>{getActivityLabel(activity.type)}</Text>
         <Text style={styles.details}>
           {activity.duration} min
           {activity.distance ? ` - ${activity.distance} km` : ''}
