@@ -3,27 +3,21 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform } from 'react-native';
 import { Activity } from '../types/Activity';
 import { Ionicons } from '@expo/vector-icons';
-import { getActivityLabel } from '../utils/activityDisplay';
+import { getActivityConfig } from '../utils/activityConfig';
 
 interface ActivityItemProps {
   activity: Activity;
   onDelete: (id: string) => void;
 }
 
-const activityIcons: Record<Activity['type'], React.ComponentProps<typeof Ionicons>['name']> = {
-  course: 'walk',
-  velo: 'bicycle',
-  natation: 'water',
-  marche: 'walk-outline',
-  musculation: 'barbell',
-};
-
 export const ActivityItem: React.FC<ActivityItemProps> = ({ activity, onDelete }) => {
+  const { icon, label } = getActivityConfig(activity.type);
+
   return (
     <View style={styles.container}>
-      <Ionicons name={activityIcons[activity.type]} size={24} color="#ffd700" style={styles.icon} />
+      <Text style={styles.icon}>{icon}</Text>
       <View style={styles.detailsContainer}>
-        <Text style={styles.title}>{getActivityLabel(activity.type)}</Text>
+        <Text style={styles.title}>{label}</Text>
         <Text style={styles.details}>
           {activity.duration} min
           {activity.distance ? ` - ${activity.distance} km` : ''}
@@ -68,6 +62,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   icon: {
+    fontSize: 24,
     marginRight: 15,
   },
   detailsContainer: {

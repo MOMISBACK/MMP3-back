@@ -1,6 +1,5 @@
 import api from "./api";
 import { Activity } from "../types/Activity";
-import { frenchToEnglishActivityType } from "../utils/activityTypeMapping";
 import { AxiosError } from "axios";
 
 export const activityService = {
@@ -21,13 +20,11 @@ export const activityService = {
     token: string,
   ): Promise<Activity> => {
     try {
-      const englishType = frenchToEnglishActivityType(activityData.type);
-
       const startTime = new Date(activityData.date);
       const endTime = new Date(startTime.getTime() + activityData.duration * 60000);
 
       const backendPayload: any = {
-        type: englishType,
+        type: activityData.type,
         startTime: startTime.toISOString(),
         endTime: endTime.toISOString(),
         date: startTime.toISOString(),

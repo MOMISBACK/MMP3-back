@@ -12,6 +12,7 @@ import {
 import { Picker } from "@react-native-picker/picker";
 import { Activity } from "../types/Activity";
 import { useActivities } from "../context/ActivityContext";
+import { activityTypes, ActivityTypeKey } from "../utils/activityConfig";
 
 interface ActivityFormProps {
   onClose: () => void;
@@ -27,7 +28,7 @@ type Exercise = {
 export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
   const { addActivity } = useActivities();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [type, setType] = useState<Activity["type"]>("course");
+  const [type, setType] = useState<ActivityTypeKey>("running");
   const [duration, setDuration] = useState("");
   const [distance, setDistance] = useState("");
 
@@ -59,16 +60,16 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
       const activityData: Partial<Activity> = {
         type,
         duration: parseInt(duration, 10),
-        date: new Date().toISOString(), // Add current date
+        date: new Date().toISOString(),
       };
 
-      if (["course", "velo", "marche"].includes(type)) {
+      if (["running", "cycling", "walking"].includes(type)) {
         activityData.distance = distance ? parseFloat(distance) : undefined;
       }
 
-      if (type === "musculation") {
+      if (type === "workout") {
         activityData.exercises = exercises
-          .filter((ex) => ex.name) // Filter out empty exercises
+          .filter((ex) => ex.name)
           .map((ex) => ({
             name: ex.name,
             sets: ex.sets ? parseInt(ex.sets, 10) : undefined,
@@ -88,9 +89,9 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
 
   const renderSpecificFields = () => {
     switch (type) {
-      case "course":
-      case "velo":
-      case "marche":
+      case "running":
+      case "cycling":
+      case "walking":
         return (
           <TextInput
             style={styles.input}
@@ -101,7 +102,7 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
             keyboardType="numeric"
           />
         );
-      case "musculation":
+      case "workout":
         return (
           <View>
             <Text style={styles.subHeader}>Exercices</Text>
@@ -171,11 +172,13 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
           style={Platform.OS === "web" ? styles.pickerWeb : styles.picker}
           itemStyle={styles.pickerItem}
         >
-          <Picker.Item label="Course à pied" value="course" />
-          <Picker.Item label="Vélo" value="velo" />
-          <Picker.Item label="Natation" value="natation" />
-          <Picker.Item label="Marche" value="marche" />
-          <Picker.Item label="Musculation" value="musculation" />
+          {activityTypes.map((activity) => (
+            <Picker.Item
+              key={activity.key}
+              label={`${activity.icon} ${activity.label}`}
+              value={activity.key}
+            />
+          ))}
         </Picker>
       </View>
       <TextInput
