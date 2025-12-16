@@ -175,6 +175,13 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
 
   return (
     <ScrollView style={styles.container}>
+      <TextInput
+        style={styles.input}
+        placeholder="Titre de l'activité"
+        placeholderTextColor="#888"
+        value={title}
+        onChangeText={setTitle}
+      />
       <View
         style={[
           styles.pickerContainer,
@@ -196,13 +203,6 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
           ))}
         </Picker>
       </View>
-      <TextInput
-        style={styles.input}
-        placeholder="Titre de l'activité"
-        placeholderTextColor="#888"
-        value={title}
-        onChangeText={setTitle}
-      />
       <TextInput
         style={styles.input}
         placeholder="Durée (minutes)"
