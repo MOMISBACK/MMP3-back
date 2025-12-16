@@ -1,9 +1,10 @@
 
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform, Pressable } from 'react-native';
 import { Activity } from '../types/Activity';
 import { Ionicons } from '@expo/vector-icons';
 import { getActivityConfig } from '../utils/activityConfig';
+import { Link } from 'expo-router';
 
 interface ActivityItemProps {
   activity: Activity;
@@ -12,43 +13,49 @@ interface ActivityItemProps {
 
 export const ActivityItem: React.FC<ActivityItemProps> = ({ activity, onDelete }) => {
   const { icon, label } = getActivityConfig(activity.type);
+  const activityId = activity._id || activity.id;
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.icon}>{icon}</Text>
-      <View style={styles.detailsContainer}>
-        <Text style={styles.title}>{label}</Text>
-        <Text style={styles.details}>
-          {activity.duration} min
-          {activity.distance ? ` - ${activity.distance} km` : ''}
-          {activity.calories ? ` - ${activity.calories} kcal` : ''}
-        </Text>
-        <Text style={styles.details}>
-          {new Date(activity.date).toLocaleDateString()} {new Date(activity.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-        </Text>
-      </View>
-      <TouchableOpacity
-        onPress={() => {
-          if (Platform.OS === 'web') {
-            if (confirm("Êtes-vous sûr de vouloir supprimer cette activité ?")) {
-              onDelete(activity._id || activity.id);
-            }
-          } else {
-            Alert.alert(
-              "Supprimer l'activité",
-              "Êtes-vous sûr de vouloir supprimer cette activité ?",
-              [
-                { text: "Annuler", style: "cancel" },
-                { text: "Supprimer", style: "destructive", onPress: () => onDelete(activity._id || activity.id) },
-              ]
-            );
-          }
-        }}
-        style={styles.deleteButton}
-      >
-        <Ionicons name="trash-outline" size={24} color="#ff6b6b" />
-      </TouchableOpacity>
-    </View>
+    <Link href={`/activities/${activityId}`} asChild>
+      <Pressable>
+        <View style={styles.container}>
+          <Text style={styles.icon}>{icon}</Text>
+          <View style={styles.detailsContainer}>
+            <Text style={styles.title}>{label}</Text>
+            <Text style={styles.details}>
+              {activity.duration} min
+              {activity.distance ? ` - ${activity.distance} km` : ''}
+              {activity.calories ? ` - ${activity.calories} kcal` : ''}
+            </Text>
+            <Text style={styles.details}>
+              {new Date(activity.date).toLocaleDateString()} {new Date(activity.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </Text>
+          </View>
+          <TouchableOpacity
+            onPress={(e) => {
+              e.preventDefault(); // Prevent navigating when deleting
+              if (Platform.OS === 'web') {
+                if (confirm("Êtes-vous sûr de vouloir supprimer cette activité ?")) {
+                  onDelete(activityId);
+                }
+              } else {
+                Alert.alert(
+                  "Supprimer l'activité",
+                  "Êtes-vous sûr de vouloir supprimer cette activité ?",
+                  [
+                    { text: "Annuler", style: "cancel" },
+                    { text: "Supprimer", style: "destructive", onPress: () => onDelete(activityId) },
+                  ]
+                );
+              }
+            }}
+            style={styles.deleteButton}
+          >
+            <Ionicons name="trash-outline" size={24} color="#ff6b6b" />
+          </TouchableOpacity>
+        </View>
+      </Pressable>
+    </Link>
   );
 };
 
