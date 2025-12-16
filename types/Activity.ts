@@ -1,7 +1,9 @@
+import { ActivityTypeKey } from "../utils/activityConfig";
+
 export interface Activity {
   _id?: string;
   id: string;
-  type: "course" | "velo" | "natation" | "marche" | "musculation";
+  type: ActivityTypeKey;
   duration: number; // in minutes
   distance?: number; // in km
   calories?: number;
