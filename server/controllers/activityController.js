@@ -64,6 +64,9 @@ const addUserActivity = async (req, res) => {
     res.status(201).json(activity);
   } catch (error) {
     console.error(error.message);
+    if (error.name === 'ValidationError') {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
     res.status(500).send('Server Error');
   }
 };
