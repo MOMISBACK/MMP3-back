@@ -4,7 +4,7 @@ import React, { useMemo, useState } from "react";
 import { StyleSheet, Text, View, ScrollView } from "react-native";
 import { useActivities } from "../../context/ActivityContext";
 import { statsProcessor, GlobalStats } from "../../services/statsProcessor";
-import { Activity } from "../../types/Activity";
+import { ActivityTypeKey, getActivityConfig } from "../../utils/activityConfig";
 
 type Period = "semaine" | "mois" | "annee";
 
@@ -13,32 +13,35 @@ const BarChart = ({
   title,
   unit,
 }: {
-  data: Record<Activity["type"], number>;
+  data: Record<ActivityTypeKey, number>;
   title: string;
   unit: string;
 }) => {
   const maxValue = Math.max(...Object.values(data));
-  const entries = Object.entries(data);
+  const entries = Object.entries(data).filter(([, value]) => value > 0);
 
   return (
     <View style={styles.chartContainer}>
       <Text style={styles.chartTitle}>{title}</Text>
-      {entries.map(([type, value]) => (
-        <View key={type} style={styles.barWrapper}>
-          <Text style={styles.barLabel}>{type}</Text>
-          <View style={styles.bar}>
-            <View
-              style={[
-                styles.barFill,
-                { width: `${(value / (maxValue || 1)) * 100}%` },
-              ]}
-            />
+      {entries.map(([type, value]) => {
+        const config = getActivityConfig(type as ActivityTypeKey);
+        return (
+          <View key={type} style={styles.barWrapper}>
+            <Text style={styles.barLabel}>{config.icon} {config.label}</Text>
+            <View style={styles.bar}>
+              <View
+                style={[
+                  styles.barFill,
+                  { width: `${(value / (maxValue || 1)) * 100}%` },
+                ]}
+              />
+            </View>
+            <Text style={styles.barValue}>
+              {value.toFixed(1)} {unit}
+            </Text>
           </View>
-          <Text style={styles.barValue}>
-            {value.toFixed(1)} {unit}
-          </Text>
-        </View>
-      ))}
+        );
+      })}
     </View>
   );
 };
@@ -133,7 +136,7 @@ export default function StatsScreen() {
             <View style={styles.statsCard}>
               <Text style={styles.cardTitle}>Activité la plus longue</Text>
               <Text style={styles.cardText}>
-                {stats.longestActivity.title} ({stats.longestActivity.type})
+                {getActivityConfig(stats.longestActivity.type).label}
               </Text>
               <Text style={styles.cardText}>Durée: {stats.longestActivity.duration} min</Text>
             </View>
