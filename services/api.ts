@@ -71,7 +71,7 @@ export const getCurrentUser = async (): Promise<User> => {
       throw new Error('No token found');
     }
 
-    const response = await api.get<User>('/auth/me', {
+    const response = await api.get<User>('/users/profile', {
       headers: {
         Authorization: `Bearer ${token}`,
       },
