@@ -21,11 +21,10 @@ export const ActivityItem: React.FC<ActivityItemProps> = ({ activity, onDelete }
         <View style={styles.container}>
           <Text style={styles.icon}>{config.icon}</Text>
           <View style={styles.detailsContainer}>
-            <Text style={styles.title}>{config.label}</Text>
+            <Text style={styles.title}>{activity.title}</Text>
             <Text style={styles.details}>
               {activity.duration} min
               {activity.distance ? ` - ${activity.distance} km` : ''}
-              {activity.calories ? ` - ${activity.calories} kcal` : ''}
             </Text>
             <Text style={styles.details}>
               {new Date(activity.date).toLocaleDateString()} {new Date(activity.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
