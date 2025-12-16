@@ -35,6 +35,12 @@ export default function ActivityDetailScreen() {
             <Text style={styles.detailValue}>{activity.distance} km</Text>
           </View>
         )}
+        {config.fields.includes("elevationGain") && activity.elevationGain && (
+          <View style={styles.detailItem}>
+            <Text style={styles.detailLabel}>Dénivelé</Text>
+            <Text style={styles.detailValue}>{activity.elevationGain} m</Text>
+          </View>
+        )}
         {config.fields.includes("exercises") && activity.exercises && (
           <View>
             <Text style={styles.subHeader}>Exercices</Text>
@@ -54,10 +60,10 @@ export default function ActivityDetailScreen() {
 
   return (
     <ScrollView style={styles.scrollContainer}>
-      <Stack.Screen options={{ title: config.label }} />
+      <Stack.Screen options={{ title: activity.title }} />
       <View style={styles.header}>
         <Text style={styles.icon}>{config.icon}</Text>
-        <Text style={styles.title}>{config.label}</Text>
+        <Text style={styles.title}>{activity.title}</Text>
       </View>
       <View style={styles.detailItem}>
         <Text style={styles.detailLabel}>Durée</Text>

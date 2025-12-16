@@ -29,9 +29,10 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
   const { addActivity } = useActivities();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [type, setType] = useState<ActivityTypeKey>("running");
+  const [title, setTitle] = useState("");
   const [duration, setDuration] = useState("");
   const [distance, setDistance] = useState("");
-  const [calories, setCalories] = useState("");
+  const [elevation, setElevation] = useState("");
 
   // State for workout exercises
   const [exercises, setExercises] = useState<Exercise[]>([
@@ -54,12 +55,13 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
   };
 
   const handleSubmit = async () => {
-    if (!duration || isSubmitting) return;
+    if (!title || !duration || isSubmitting) return;
 
     setIsSubmitting(true);
     try {
       const config = activityConfig[type];
       const activityData: Partial<Activity> = {
+        title,
         type,
         duration: parseInt(duration, 10),
         date: new Date().toISOString(),
@@ -69,8 +71,8 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
         activityData.distance = distance ? parseFloat(distance) : undefined;
       }
 
-      if (config.fields.includes("calories")) {
-        activityData.calories = calories ? parseInt(calories, 10) : undefined;
+      if (config.fields.includes("elevationGain")) {
+        activityData.elevationGain = elevation ? parseInt(elevation, 10) : undefined;
       }
 
       if (config.fields.includes("exercises")) {
@@ -107,13 +109,13 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
             keyboardType="numeric"
           />
         )}
-        {fields.includes("calories") && (
+        {fields.includes("elevationGain") && (
           <TextInput
             style={styles.input}
-            placeholder="Calories"
+            placeholder="Dénivelé (m)"
             placeholderTextColor="#888"
-            value={calories}
-            onChangeText={setCalories}
+            value={elevation}
+            onChangeText={setElevation}
             keyboardType="numeric"
           />
         )}
@@ -194,6 +196,13 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
           ))}
         </Picker>
       </View>
+      <TextInput
+        style={styles.input}
+        placeholder="Titre de l'activité"
+        placeholderTextColor="#888"
+        value={title}
+        onChangeText={setTitle}
+      />
       <TextInput
         style={styles.input}
         placeholder="Durée (minutes)"

@@ -122,14 +122,12 @@ export default function StatsScreen() {
             <Text style={styles.cardText}>Activités: {stats.totalActivities}</Text>
             <Text style={styles.cardText}>Durée: {stats.totalDuration.toFixed(2)} min</Text>
             <Text style={styles.cardText}>Distance: {stats.totalDistance.toFixed(2)} km</Text>
-            <Text style={styles.cardText}>Calories: {stats.totalCalories.toFixed(2)} kcal</Text>
           </View>
 
           <View style={styles.statsCard}>
             <Text style={styles.cardTitle}>Moyennes par activité</Text>
             <Text style={styles.cardText}>Durée: {stats.averageDuration.toFixed(2)} min</Text>
             <Text style={styles.cardText}>Distance: {stats.averageDistance.toFixed(2)} km</Text>
-            <Text style={styles.cardText}>Calories: {stats.averageCalories.toFixed(2)} kcal</Text>
           </View>
 
           {stats.longestActivity && (
@@ -151,11 +149,6 @@ export default function StatsScreen() {
             data={stats.distanceByType}
             title="Distance par type d'activité"
             unit="km"
-          />
-          <BarChart
-            data={stats.caloriesByType}
-            title="Calories par type d'activité"
-            unit="kcal"
           />
         </>
       )}
