@@ -1,24 +1,41 @@
-export type ActivityTypeKey = "running" | "walking" | "cycling" | "swimming" | "workout" | "yoga";
-export type StatCategory = "duration" | "distance" | "calories";
+export const activityConfig = {
+  running: {
+    label: "Course à pied",
+    icon: "🏃",
+    fields: ["duration", "distance", "calories"],
+  },
+  walking: {
+    label: "Marche",
+    icon: "🚶",
+    fields: ["duration", "distance", "calories"],
+  },
+  cycling: {
+    label: "Vélo",
+    icon: "🚴",
+    fields: ["duration", "distance", "calories"],
+  },
+  swimming: {
+    label: "Natation",
+    icon: "🏊",
+    fields: ["duration", "distance", "calories"],
+  },
+  workout: {
+    label: "Musculation",
+    icon: "🏋️",
+    fields: ["duration", "calories", "exercises"],
+  },
+  yoga: {
+    label: "Yoga",
+    icon: "🧘",
+    fields: ["duration", "calories"],
+  },
+} as const;
 
-interface ActivityConfig {
-  key: ActivityTypeKey;
-  label: string;
-  icon: string;
-  contributesTo: StatCategory[];
-}
+export type ActivityTypeKey = keyof typeof activityConfig;
 
-export const activityTypes: ActivityConfig[] = [
-  { key: "running", label: "Course à pied", icon: "🏃", contributesTo: ["duration", "distance", "calories"] },
-  { key: "walking", label: "Marche", icon: "🚶", contributesTo: ["duration", "distance", "calories"] },
-  { key: "cycling", label: "Vélo", icon: "🚴", contributesTo: ["duration", "distance", "calories"] },
-  { key: "swimming", label: "Natation", icon: "🏊", contributesTo: ["duration", "distance", "calories"] },
-  { key: "workout", label: "Musculation", icon: "🏋️", contributesTo: ["duration", "calories"] },
-  { key: "yoga", label: "Yoga", icon: "🧘", contributesTo: ["duration", "calories"] },
-];
-
-const configMap = new Map(activityTypes.map(item => [item.key, item]));
-
-export const getActivityConfig = (key: ActivityTypeKey) => {
-  return configMap.get(key) || { key, label: key, icon: "⚪" };
-};
+export const activityTypes = Object.entries(activityConfig).map(
+  ([key, value]) => ({
+    key: key as ActivityTypeKey,
+    ...value,
+  }),
+);

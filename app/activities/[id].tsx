@@ -1,14 +1,13 @@
 import { Stack, useLocalSearchParams } from "expo-router";
 import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from "react-native";
 import { useActivities } from "../../context/ActivityContext";
-import { getActivityConfig } from "../../utils/activityConfig";
+import { activityConfig } from "../../utils/activityConfig";
 import { useEffect, useState } from "react";
 import { Activity } from "../../types/Activity";
 
 export default function ActivityDetailScreen() {
   const { id } = useLocalSearchParams();
   const { activities } = useActivities();
-  const router = useRouter();
   const [activity, setActivity] = useState<Activity | null>(null);
 
   useEffect(() => {
@@ -25,24 +24,21 @@ export default function ActivityDetailScreen() {
     );
   }
 
-  const { icon, label } = getActivityConfig(activity.type);
+  const config = activityConfig[activity.type] || { icon: "⚪", label: "Activité", fields: [] };
 
   const renderSpecificDetails = () => {
-    switch (activity.type) {
-      case "running":
-      case "cycling":
-      case "walking":
-        return (
+    return (
+      <>
+        {config.fields.includes("distance") && activity.distance && (
           <View style={styles.detailItem}>
             <Text style={styles.detailLabel}>Distance</Text>
             <Text style={styles.detailValue}>{activity.distance} km</Text>
           </View>
-        );
-      case "workout":
-        return (
+        )}
+        {config.fields.includes("exercises") && activity.exercises && (
           <View>
             <Text style={styles.subHeader}>Exercices</Text>
-            {activity.exercises?.map((exercise, index) => (
+            {activity.exercises.map((exercise, index) => (
               <View key={index} style={styles.exerciseContainer}>
                 <Text style={styles.exerciseName}>{exercise.name}</Text>
                 <Text style={styles.exerciseDetails}>
@@ -51,18 +47,17 @@ export default function ActivityDetailScreen() {
               </View>
             ))}
           </View>
-        );
-      default:
-        return null;
-    }
+        )}
+      </>
+    );
   };
 
   return (
     <ScrollView style={styles.scrollContainer}>
-      <Stack.Screen options={{ title: label }} />
+      <Stack.Screen options={{ title: config.label }} />
       <View style={styles.header}>
-        <Text style={styles.icon}>{icon}</Text>
-        <Text style={styles.title}>{label}</Text>
+        <Text style={styles.icon}>{config.icon}</Text>
+        <Text style={styles.title}>{config.label}</Text>
       </View>
       <View style={styles.detailItem}>
         <Text style={styles.detailLabel}>Durée</Text>

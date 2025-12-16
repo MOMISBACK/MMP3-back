@@ -4,7 +4,7 @@ import React, { useMemo, useState } from "react";
 import { StyleSheet, Text, View, ScrollView } from "react-native";
 import { useActivities } from "../../context/ActivityContext";
 import { statsProcessor, GlobalStats } from "../../services/statsProcessor";
-import { ActivityTypeKey, getActivityConfig } from "../../utils/activityConfig";
+import { ActivityTypeKey, activityConfig } from "../../utils/activityConfig";
 
 type Period = "semaine" | "mois" | "annee";
 
@@ -24,7 +24,7 @@ const BarChart = ({
     <View style={styles.chartContainer}>
       <Text style={styles.chartTitle}>{title}</Text>
       {entries.map(([type, value]) => {
-        const config = getActivityConfig(type as ActivityTypeKey);
+        const config = activityConfig[type as ActivityTypeKey] || { icon: "⚪", label: "Activité" };
         return (
           <View key={type} style={styles.barWrapper}>
             <Text style={styles.barLabel}>{config.icon} {config.label}</Text>
@@ -136,7 +136,7 @@ export default function StatsScreen() {
             <View style={styles.statsCard}>
               <Text style={styles.cardTitle}>Activité la plus longue</Text>
               <Text style={styles.cardText}>
-                {getActivityConfig(stats.longestActivity.type).label}
+                {activityConfig[stats.longestActivity.type]?.label || "Activité"}
               </Text>
               <Text style={styles.cardText}>Durée: {stats.longestActivity.duration} min</Text>
             </View>
