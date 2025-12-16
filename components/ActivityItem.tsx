@@ -10,7 +10,7 @@ interface ActivityItemProps {
 }
 
 const activityIcons: Record<Activity['type'], React.ComponentProps<typeof Ionicons>['name']> = {
-  course: 'run',
+  course: 'walk',
   velo: 'bicycle',
   natation: 'water',
   marche: 'walk-outline',
