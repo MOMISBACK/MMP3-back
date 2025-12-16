@@ -124,20 +124,6 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
               <View key={index} style={styles.exerciseContainer}>
                 <TextInput
                   style={styles.input}
-            placeholder="Distance (km)"
-            placeholderTextColor="#888"
-            value={distance}
-            onChangeText={setDistance}
-            keyboardType="numeric"
-          />
-        )}
-        {fields.includes("exercises") && (
-          <View>
-            <Text style={styles.subHeader}>Exercices</Text>
-            {exercises.map((exercise, index) => (
-              <View key={index} style={styles.exerciseContainer}>
-                <TextInput
-                  style={styles.input}
                   placeholder={`Exercice ${index + 1}`}
                   placeholderTextColor="#888"
                   value={exercise.name}
