@@ -64,6 +64,11 @@ export function ActivityProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
+      const completeActivityData = {
+        ...activityData,
+        userId: user?._id,   
+        source: 'manual',              
+      };
       await activityService.addActivity(activityData, token);
       await loadActivities(); // Re-fetch all activities to ensure consistency
     } catch (error) {

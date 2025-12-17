@@ -3,6 +3,7 @@ import { ActivityTypeKey } from "../utils/activityConfig";
 export interface Activity {
   _id?: string;
   id: string;
+  userId?: string;
   title: string;
   type: ActivityTypeKey;
   duration: number; // in minutes

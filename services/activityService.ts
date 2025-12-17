@@ -24,6 +24,7 @@ export const activityService = {
       const endTime = new Date(startTime.getTime() + activityData.duration * 60000);
 
       const backendPayload: any = {
+        userId: activityData.userId,
         title: activityData.title,
         type: activityData.type,
         startTime: startTime.toISOString(),
@@ -32,6 +33,8 @@ export const activityService = {
         duration: activityData.duration,
         source: "manual",
       };
+
+      console.log("📤 PAYLOAD ENVOYÉ:", JSON.stringify(backendPayload, null, 2));
 
       if (activityData.distance) {
         backendPayload.distance = activityData.distance;

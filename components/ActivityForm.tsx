@@ -63,6 +63,7 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
       const activityData: Partial<Activity> = {
         title,
         type,
+        source: 'manual',
         duration: parseInt(duration, 10),
         date: new Date().toISOString(),
       };
@@ -87,11 +88,11 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
       }
 
       await addActivity(activityData as Omit<Activity, "id">);
-      onClose();
     } catch (error) {
       console.error("Failed to add activity:", error);
     } finally {
       setIsSubmitting(false);
+      onClose();
     }
   };
 
@@ -174,7 +175,9 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView 
+    style={styles.container}
+    keyboardShouldPersistTaps="handled">
       <TextInput
         style={styles.input}
         placeholder="Titre de l'activité"
