@@ -14,6 +14,7 @@ module.exports = {
       testMatch: [
         '<rootDir>/components/**/*.test.tsx',
         '<rootDir>/hooks/**/*.test.ts',
+        '<rootDir>/context/**/*.test.tsx',
       ],
     },
     // Configuration pour les tests backend
