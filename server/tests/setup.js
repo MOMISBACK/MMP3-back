@@ -16,11 +16,6 @@ afterAll(async () => {
   await mongoServer.stop();
 });
 
-// Optionnel : Exécuté après chaque test pour nettoyer les collections
-afterEach(async () => {
-  const collections = mongoose.connection.collections;
-  for (const key in collections) {
-    const collection = collections[key];
-    await collection.deleteMany();
-  }
-});
+// La logique de nettoyage est maintenant gérée dans le `beforeEach` de chaque
+// fichier de test spécifique (ex: activity.test.js) pour plus de clarté
+// et pour éviter les problèmes de redondance.
