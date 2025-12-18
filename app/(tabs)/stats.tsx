@@ -1,12 +1,39 @@
-
 import { Picker } from "@react-native-picker/picker";
 import React, { useMemo, useState } from "react";
 import { StyleSheet, Text, View, ScrollView } from "react-native";
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useActivities } from "../../context/ActivityContext";
 import { statsProcessor, GlobalStats } from "../../services/statsProcessor";
 import { ActivityTypeKey, activityConfig } from "../../utils/activityConfig";
 
 type Period = "semaine" | "mois" | "annee";
+
+const formatDuration = (minutes: number) => {
+  if (minutes < 60) return `${minutes.toFixed(0)}min`;
+  const hours = Math.floor(minutes / 60);
+  const mins = Math.round(minutes % 60);
+  return `${hours}h${mins > 0 ? mins : ''}`;
+};
+
+const StatCard = ({ 
+  icon, 
+  label, 
+  value, 
+  unit 
+}: { 
+  icon: string; 
+  label: string; 
+  value: string | number; 
+  unit?: string;
+}) => (
+  <View style={styles.statCard}>
+    <Ionicons name={icon as any} size={28} color="#ffd700" />
+    <Text style={styles.statValue}>
+      {value}{unit && <Text style={styles.statUnit}> {unit}</Text>}
+    </Text>
+    <Text style={styles.statLabel}>{label}</Text>
+  </View>
+);
 
 const BarChart = ({
   data,
@@ -18,34 +45,58 @@ const BarChart = ({
   unit: string;
 }) => {
   const maxValue = Math.max(...Object.values(data));
-  const entries = Object.entries(data).filter(([, value]) => value > 0);
+  const entries = Object.entries(data)
+    .filter(([, value]) => value > 0)
+    .sort(([, a], [, b]) => b - a);
+
+  if (entries.length === 0) return null;
 
   return (
     <View style={styles.chartContainer}>
-      <Text style={styles.chartTitle}>{title}</Text>
+      <View style={styles.chartHeader}>
+        <Ionicons name="bar-chart-outline" size={20} color="#ffd700" />
+        <Text style={styles.chartTitle}>{title}</Text>
+      </View>
       {entries.map(([type, value]) => {
-        const config = activityConfig[type as ActivityTypeKey] || { icon: "⚪", label: "Activité" };
+        const config = activityConfig[type as ActivityTypeKey];
+        const IconComponent = config?.iconFamily === 'MaterialCommunityIcons' 
+          ? MaterialCommunityIcons 
+          : Ionicons;
+        
+        // Formatage conditionnel selon l'unité
+        const displayValue = unit === "min" 
+          ? formatDuration(value) 
+          : `${value.toFixed(1)} ${unit}`;
+        
         return (
           <View key={type} style={styles.barWrapper}>
-            <Text style={styles.barLabel}>{config.icon} {config.label}</Text>
-            <View style={styles.bar}>
-              <View
-                style={[
-                  styles.barFill,
-                  { width: `${(value / (maxValue || 1)) * 100}%` },
-                ]}
+            <View style={styles.barLabelContainer}>
+              <IconComponent 
+                name={config?.icon as any} 
+                size={18} 
+                color="#aaa" 
               />
+              <Text style={styles.barLabel}>{config?.label || type}</Text>
             </View>
-            <Text style={styles.barValue}>
-              {value.toFixed(1)} {unit}
-            </Text>
+            <View style={styles.barContainer}>
+              <View style={styles.barBackground}>
+                <View
+                  style={[
+                    styles.barFill,
+                    { width: `${(value / (maxValue || 1)) * 100}%` },
+                  ]}
+                />
+              </View>
+              <Text style={styles.barValue}>
+                {displayValue}
+              </Text>
+            </View>
           </View>
         );
       })}
     </View>
   );
 };
-
 
 export default function StatsScreen() {
   const { activities, loading } = useActivities();
@@ -88,68 +139,102 @@ export default function StatsScreen() {
   }, [filteredActivities]);
 
   if (loading) {
-    return <View style={styles.container}><Text style={styles.loadingText}>Chargement des statistiques...</Text></View>;
+    return (
+      <View style={styles.loadingContainer}>
+        <Ionicons name="stats-chart" size={48} color="#ffd700" />
+        <Text style={styles.loadingText}>Chargement des statistiques...</Text>
+      </View>
+    );
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Statistiques</Text>
+    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Ionicons name="stats-chart" size={32} color="#ffd700" />
+        <Text style={styles.title}>Statistiques</Text>
+      </View>
 
+      {/* Sélecteur de période */}
       <View style={styles.pickerContainer}>
-        <Text style={styles.pickerLabel}>Période :</Text>
+        <Ionicons name="calendar-outline" size={20} color="#ffd700" />
         <Picker
           selectedValue={period}
           onValueChange={(v) => setPeriod(v as Period)}
           style={styles.picker}
           itemStyle={styles.pickerItem}
         >
-          <Picker.Item label="Semaine" value="semaine" />
-          <Picker.Item label="Mois" value="mois" />
-          <Picker.Item label="Année" value="annee" />
+          <Picker.Item label="Cette semaine" value="semaine" />
+          <Picker.Item label="Ce mois" value="mois" />
+          <Picker.Item label="Cette année" value="annee" />
         </Picker>
       </View>
 
       {filteredActivities.length === 0 ? (
-        <View style={styles.emptyBox}>
-          <Text style={styles.emptyText}>
-            Aucune activité enregistrée pour cette période 💤
-          </Text>
+        <View style={styles.emptyState}>
+          <Ionicons name="moon-outline" size={64} color="#444" />
+          <Text style={styles.emptyText}>Aucune activité</Text>
+          <Text style={styles.emptySubtext}>pour cette période</Text>
         </View>
       ) : (
         <>
-          <View style={styles.statsCard}>
-            <Text style={styles.cardTitle}>Totaux</Text>
-            <Text style={styles.cardText}>Activités: {stats.totalActivities}</Text>
-            <Text style={styles.cardText}>Durée: {stats.totalDuration.toFixed(2)} min</Text>
-            <Text style={styles.cardText}>Distance: {stats.totalDistance.toFixed(2)} km</Text>
+          {/* Stats principales */}
+          <View style={styles.statsGrid}>
+            <StatCard
+              icon="flag-outline"
+              label="Activités"
+              value={stats.totalActivities}
+            />
+            <StatCard
+              icon="time-outline"
+              label="Durée totale"
+              value={formatDuration(stats.totalDuration)}
+            />
+            <StatCard
+              icon="speedometer-outline"
+              label="Distance totale"
+              value={stats.totalDistance.toFixed(1)}
+              unit="km"
+            />
+            <StatCard
+              icon="trending-up-outline"
+              label="Moy. durée"
+              value={formatDuration(stats.averageDuration)}
+            />
           </View>
 
-          <View style={styles.statsCard}>
-            <Text style={styles.cardTitle}>Moyennes par activité</Text>
-            <Text style={styles.cardText}>Durée: {stats.averageDuration.toFixed(2)} min</Text>
-            <Text style={styles.cardText}>Distance: {stats.averageDistance.toFixed(2)} km</Text>
-          </View>
-
+          {/* Activité la plus longue */}
           {stats.longestActivity && (
-            <View style={styles.statsCard}>
-              <Text style={styles.cardTitle}>Activité la plus longue</Text>
-              <Text style={styles.cardText}>
-                {activityConfig[stats.longestActivity.type]?.label || "Activité"}
-              </Text>
-              <Text style={styles.cardText}>Durée: {stats.longestActivity.duration} min</Text>
+            <View style={styles.highlightCard}>
+              <View style={styles.highlightHeader}>
+                <Ionicons name="trophy-outline" size={24} color="#ffd700" />
+                <Text style={styles.highlightTitle}>Record de durée</Text>
+              </View>
+              <View style={styles.highlightContent}>
+                <Text style={styles.highlightValue}>
+                  {formatDuration(stats.longestActivity.duration)}
+                </Text>
+                <Text style={styles.highlightLabel}>
+                  {activityConfig[stats.longestActivity.type]?.label || "Activité"}
+                </Text>
+              </View>
             </View>
           )}
 
+          {/* Graphiques */}
           <BarChart
             data={stats.durationByType}
-            title="Durée par type d'activité"
+            title="Temps par activité"
             unit="min"
           />
-          <BarChart
-            data={stats.distanceByType}
-            title="Distance par type d'activité"
-            unit="km"
-          />
+          
+          {Object.values(stats.distanceByType).some(v => v > 0) && (
+            <BarChart
+              data={stats.distanceByType}
+              title="Distance par activité"
+              unit="km"
+            />
+          )}
         </>
       )}
     </ScrollView>
@@ -159,98 +244,181 @@ export default function StatsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
     backgroundColor: "#111",
   },
+  contentContainer: {
+    padding: 16,
+    paddingBottom: 40,
+  },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: "#111",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   loadingText: {
-    color: '#fff',
-    textAlign: 'center',
-    marginTop: 50
+    color: "#aaa",
+    fontSize: 16,
+    marginTop: 16,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+    marginTop: 20,
   },
   title: {
     fontSize: 28,
     fontWeight: "bold",
     color: "#fff",
-    marginBottom: 20,
-    marginTop: 40,
+    marginLeft: 12,
   },
   pickerContainer: {
     flexDirection: "row",
     alignItems: "center",
+    backgroundColor: "#1e1e1e",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 4,
     marginBottom: 20,
-    backgroundColor: '#1e1e1e',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-  },
-  pickerLabel: {
-    color: '#fff',
-    fontSize: 16,
   },
   picker: {
     flex: 1,
-    color: '#fff',
+    color: "#fff",
   },
   pickerItem: {
-    color: '#fff',
-    backgroundColor: '#1e1e1e'
-  },
-  statsCard: {
+    color: "#fff",
     backgroundColor: "#1e1e1e",
-    borderRadius: 8,
-    padding: 15,
+  },
+  emptyState: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 60,
+  },
+  emptyText: {
+    color: "#666",
+    fontSize: 20,
+    fontWeight: "600",
+    marginTop: 16,
+  },
+  emptySubtext: {
+    color: "#555",
+    fontSize: 14,
+    marginTop: 4,
+  },
+  statsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
     marginBottom: 20,
   },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#ffd700",
-    marginBottom: 10,
+  statCard: {
+    flex: 1,
+    minWidth: "45%",
+    backgroundColor: "#1e1e1e",
+    borderRadius: 12,
+    padding: 16,
+    alignItems: "center",
   },
-  cardText: {
-    color: '#fff',
+  statValue: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#fff",
+    marginTop: 8,
+  },
+  statUnit: {
     fontSize: 16,
-    marginBottom: 5,
+    color: "#aaa",
   },
-  chartContainer: {
+  statLabel: {
+    fontSize: 13,
+    color: "#aaa",
+    marginTop: 4,
+  },
+  highlightCard: {
+    backgroundColor: "#1e1e1e",
+    borderRadius: 12,
+    padding: 20,
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#ffd700",
   },
-  chartTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#ffd700",
-    marginBottom: 10,
-  },
-  barWrapper: {
+  highlightHeader: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 12,
+  },
+  highlightTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#ffd700",
+    marginLeft: 8,
+  },
+  highlightContent: {
+    alignItems: "center",
+  },
+  highlightValue: {
+    fontSize: 32,
+    fontWeight: "bold",
+    color: "#fff",
+  },
+  highlightLabel: {
+    fontSize: 16,
+    color: "#aaa",
+    marginTop: 4,
+  },
+  chartContainer: {
+    backgroundColor: "#1e1e1e",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+  },
+  chartHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  chartTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#fff",
+    marginLeft: 8,
+  },
+  barWrapper: {
+    marginBottom: 12,
+  },
+  barLabelContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 6,
   },
   barLabel: {
-    width: 80,
-    color: '#fff',
+    fontSize: 14,
+    color: "#aaa",
+    marginLeft: 8,
   },
-  bar: {
+  barContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  barBackground: {
     flex: 1,
-    height: 20,
-    backgroundColor: "#333",
-    borderRadius: 4,
-    marginRight: 8,
+    height: 24,
+    backgroundColor: "#2a2a2a",
+    borderRadius: 6,
+    marginRight: 12,
+    overflow: "hidden",
   },
   barFill: {
     height: "100%",
     backgroundColor: "#ffd700",
-    borderRadius: 4,
+    borderRadius: 6,
   },
   barValue: {
-    minWidth: 60,
+    minWidth: 70,
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#fff",
     textAlign: "right",
-    color: '#fff',
   },
-  emptyBox: {
-    backgroundColor: "#1e1e1e",
-    padding: 20,
-    alignItems: "center",
-    borderRadius: 8,
-  },
-  emptyText: { color: "#888" },
 });

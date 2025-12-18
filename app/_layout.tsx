@@ -1,9 +1,11 @@
+// app/_layout.tsx
 
 import { Slot, useRouter, useSegments } from "expo-router";
 import { ActivityProvider } from "../context/ActivityContext";
 import { AuthProvider, useAuth } from "../context/AuthContext";
+import { ChallengeProvider } from "../context/ChallengeContext";
 import { useEffect } from "react";
-import { View, ActivityIndicator } from "react-native";
+import { View, ActivityIndicator, Text } from "react-native";
 
 const InitialLayout = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -24,8 +26,9 @@ const InitialLayout = () => {
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" />
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: '#111' }}>
+        <ActivityIndicator size="large" color="#ffd700" />
+        <Text style={{ color: '#fff', marginTop: 20 }}>Chargement...</Text>
       </View>
     );
   }
@@ -36,9 +39,11 @@ const InitialLayout = () => {
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <ActivityProvider>
-        <InitialLayout />
-      </ActivityProvider>
+      <ChallengeProvider>
+        <ActivityProvider>
+          <InitialLayout />
+        </ActivityProvider>
+      </ChallengeProvider>
     </AuthProvider>
   );
 }

@@ -1,41 +1,32 @@
 export const activityConfig = {
   running: {
+    icon: "run",
+    iconFamily: "MaterialCommunityIcons",
     label: "Course à pied",
-    icon: "🏃",
-    fields: ["duration", "distance", "elevationGain"],
-  },
-  walking: {
-    label: "Marche",
-    icon: "🚶",
-    fields: ["duration", "distance", "elevationGain"],
+    fields: ["distance", "elevationGain", "avgSpeed", "duration"],
   },
   cycling: {
+    icon: "bicycle-outline",
     label: "Vélo",
-    icon: "🚴",
-    fields: ["duration", "distance", "elevationGain"],
+    fields: ["distance", "elevationGain", "avgSpeed", "duration"],
+  },
+  walking: {
+    icon: "walk-outline",
+    label: "Marche",
+    fields: ["distance", "duration"],
   },
   swimming: {
+    icon: "water-outline",
     label: "Natation",
-    icon: "🏊",
-    fields: ["duration", "distance"],
+    fields: ["distance", "poolLength", "laps", "duration"],
   },
   workout: {
+    icon: "barbell-outline",
     label: "Musculation",
-    icon: "🏋️",
-    fields: ["duration", "exercises"],
+    fields: ["exercises", "duration"],
   },
-  yoga: {
-    label: "Yoga",
-    icon: "🧘",
-    fields: ["duration"],
-  },
+
+  
 } as const;
 
 export type ActivityTypeKey = keyof typeof activityConfig;
-
-export const activityTypes = Object.entries(activityConfig).map(
-  ([key, value]) => ({
-    key: key as ActivityTypeKey,
-    ...value,
-  }),
-);

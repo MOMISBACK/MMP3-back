@@ -1,3 +1,5 @@
+// context/ActivityContext.tsx
+
 import React, {
   createContext,
   useContext,
@@ -8,7 +10,8 @@ import React, {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Activity } from "../types/Activity";
 import { activityService } from "../services/activityService";
-import { useAuth } from "./AuthContext"; // Assuming useAuth provides user/token
+import { useAuth } from "./AuthContext";
+import { useChallenge } from "./ChallengeContext"; // ⭐ AJOUTER
 
 interface ActivityContextType {
   activities: Activity[];
@@ -27,7 +30,17 @@ export function ActivityProvider({ children }: { children: React.ReactNode }) {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { user, token } = useAuth(); // Get user and token from AuthContext
+  const { user, token } = useAuth();
+  
+  // ⭐ AJOUTER - Gestion sécurisée de ChallengeContext
+  let refreshChallenge: (() => Promise<void>) | undefined;
+  try {
+    const challengeContext = useChallenge();
+    refreshChallenge = challengeContext.refreshChallenge;
+  } catch (error) {
+    // ChallengeContext pas encore disponible, on continue sans
+    refreshChallenge = undefined;
+  }
 
   const clearError = () => setError(null);
 
@@ -53,7 +66,7 @@ export function ActivityProvider({ children }: { children: React.ReactNode }) {
     if (user) {
       loadActivities();
     } else {
-      setActivities([]); // Clear activities on logout
+      setActivities([]);
     }
   }, [user, loadActivities]);
 
@@ -69,8 +82,15 @@ export function ActivityProvider({ children }: { children: React.ReactNode }) {
         userId: user?._id,   
         source: 'manual',              
       };
-      await activityService.addActivity(activityData, token);
-      await loadActivities(); // Re-fetch all activities to ensure consistency
+      
+      // ⚠️ CORRECTION - Utiliser completeActivityData au lieu de activityData
+      await activityService.addActivity(completeActivityData, token);
+      await loadActivities();
+      
+      // ⭐ AJOUTER - Rafraîchir le défi après ajout d'activité
+      if (refreshChallenge) {
+        await refreshChallenge();
+      }
     } catch (error) {
       console.error("Failed to save activity", error);
       setError("Impossible d'ajouter l'activité. Veuillez réessayer.");
@@ -84,16 +104,20 @@ export function ActivityProvider({ children }: { children: React.ReactNode }) {
 
     if (!token) {
       setError("Vous devez être connecté pour supprimer une activité.");
-      setActivities(originalActivities); // Rollback
+      setActivities(originalActivities);
       return;
     }
 
     try {
       await activityService.deleteActivity(id, token);
+      
+      // ⭐ AJOUTER - Rafraîchir le défi après suppression aussi
+      if (refreshChallenge) {
+        await refreshChallenge();
+      }
     } catch (error) {
       console.error("Failed to remove activity", error);
       setError("Impossible de supprimer l'activité. Veuillez réessayer.");
-      // Rollback
       setActivities(originalActivities);
     }
   };
