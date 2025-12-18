@@ -67,6 +67,7 @@ export function ActivityProvider({ children }: { children: React.ReactNode }) {
       loadActivities();
     } else {
       setActivities([]);
+      setLoading(false); // S'assurer que le chargement se termine si non authentifié
     }
   }, [user, loadActivities]);
 
