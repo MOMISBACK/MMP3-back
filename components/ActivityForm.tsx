@@ -12,7 +12,7 @@ import {
 import { Picker } from "@react-native-picker/picker";
 import { Activity } from "../types/Activity";
 import { useActivities } from "../context/ActivityContext";
-import { activityConfig, ActivityTypeKey } from "../utils/activityConfig";
+import { formConfig, ActivityTypeKey } from "../utils/formConfig";
 
 interface ActivityFormProps {
   onClose: () => void;
@@ -59,37 +59,29 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
 
     setIsSubmitting(true);
     try {
-      const config = activityConfig[type];
+      // Build the payload with all available data. The backend will clean it.
       const activityData: Partial<Activity> = {
         title,
         type,
         source: 'manual',
         duration: parseInt(duration, 10),
         date: new Date().toISOString(),
-      };
-
-      if (config.fields.includes("distance")) {
-        activityData.distance = distance ? parseFloat(distance) : undefined;
-      }
-
-      if (config.fields.includes("elevationGain")) {
-        activityData.elevationGain = elevation ? parseInt(elevation, 10) : undefined;
-      }
-
-      if (config.fields.includes("exercises")) {
-        activityData.exercises = exercises
+        distance: distance ? parseFloat(distance) : undefined,
+        elevationGain: elevation ? parseInt(elevation, 10) : undefined,
+        exercises: exercises
           .filter((ex) => ex.name)
           .map((ex) => ({
             name: ex.name,
             sets: ex.sets ? parseInt(ex.sets, 10) : undefined,
             reps: ex.reps ? parseInt(ex.reps, 10) : undefined,
             weight: ex.weight ? parseFloat(ex.weight) : undefined,
-          }));
-      }
+          })),
+      };
 
       await addActivity(activityData as Omit<Activity, "id">);
     } catch (error) {
       console.error("Failed to add activity:", error);
+      // Note: The context now handles showing the error to the user.
     } finally {
       setIsSubmitting(false);
       onClose();
@@ -97,7 +89,7 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
   };
 
   const renderSpecificFields = () => {
-    const fields = activityConfig[type].fields;
+    const fields = formConfig[type].fields;
     return (
       <>
         {fields.includes("distance") && (
@@ -197,7 +189,7 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
           style={Platform.OS === "web" ? styles.pickerWeb : styles.picker}
           itemStyle={styles.pickerItem}
         >
-          {Object.entries(activityConfig).map(([key, config]) => (
+          {Object.entries(formConfig).map(([key, config]) => (
             <Picker.Item
               key={key}
               label={`${config.icon} ${config.label}`}

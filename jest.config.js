@@ -22,7 +22,7 @@ module.exports = {
       testEnvironment: 'node', // Utilise l'environnement Node.js
       setupFilesAfterEnv: ['./server/tests/setup.js'],
       testMatch: ['<rootDir>/server/tests/**/*.test.js'],
-      testTimeout: 30000, // Augmente le timeout à 30s
     },
   ],
+  testTimeout: 30000, // Augmente le timeout global à 30s
 };
