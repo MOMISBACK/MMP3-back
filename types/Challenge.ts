@@ -1,44 +1,47 @@
 // types/Challenge.ts
 
-import { ActivityTypeKey } from '../utils/activityConfig';
-
 export type ChallengeGoalType = 'distance' | 'duration' | 'count';
 
-export interface WeeklyChallenge {
-  _id: string;
-  userId: string;
-  startDate: string;
-  endDate: string;
-  activityTypes: ActivityTypeKey[];
-  goalType: ChallengeGoalType;
-  goalValue: number;
-  title: string;
-  icon?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  progress?: ChallengeProgress;
+export interface ChallengeGoal {
+  type: ChallengeGoalType;
+  value: number;
 }
 
 export interface ChallengeProgress {
+  goalType: ChallengeGoalType;
   current: number;
   goal: number;
   percentage: number;
   isCompleted: boolean;
-  remainingActivities: number;
 }
 
-export interface ChallengeSuggestion {
+export interface OverallProgress {
+  completedGoals: number;
+  totalGoals: number;
+  percentage: number;
+  isCompleted: boolean;
+}
+
+export interface Challenge {
+  _id: string;
+  user: string;
+  goals: ChallengeGoal[];  // ⭐ Multi-objectifs
+  activityTypes: string[];
   title: string;
-  activityTypes: ActivityTypeKey[];
-  goalType: ChallengeGoalType;
-  goalValue: number;
   icon: string;
+  startDate: string;
+  endDate: string;
+  progress: ChallengeProgress[];  // ⭐ Un par objectif
+  overallProgress: OverallProgress;  // ⭐ Global
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateChallengeData {
-  activityTypes: ActivityTypeKey[];
-  goalType: ChallengeGoalType;
-  goalValue: number;
+  goals: ChallengeGoal[];  // ⭐ Multi-objectifs
+  activityTypes: string[];
   title: string;
-  icon?: string;
+  icon: string;
 }
+
+export interface UpdateChallengeData extends CreateChallengeData {}

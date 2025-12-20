@@ -1,11 +1,15 @@
+// components/ActivityItem.tsx
+
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform, Pressable } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Activity } from '../types/Activity';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';  // ⬅️ AJOUTE MaterialCommunityIcons
+import { Ionicons } from '@expo/vector-icons';
 import { activityConfig } from '../utils/activityConfig';
 import { activityFormatters } from '../utils/activityFormatters';
 import { Link } from 'expo-router';
-
+import { theme } from '../utils/theme';
+import { useAuth } from '../context/AuthContext';
 
 interface ActivityItemProps {
   activity: Activity;
@@ -13,21 +17,28 @@ interface ActivityItemProps {
 }
 
 export const ActivityItem: React.FC<ActivityItemProps> = ({ activity, onDelete }) => {
-  const config = activityConfig[activity.type] || { icon: "⚪", label: "Activité" };
+  const { user } = useAuth();
+  const config = activityConfig[activity.type] || { icon: "help-circle-outline", label: "Activité" };
   const activityId = activity._id || activity.id;
   const { date, time } = activityFormatters.formatDateTime(activity.date);
 
+  // Pour l'instant : toutes les activités sont "moi" (cyan)
+  // Plus tard : on comparera activity.userId avec user._id
+  const isMyActivity = true; // Simulé
+  const userColor = isMyActivity ? theme.colors.users.primary : theme.colors.users.secondary;
+  const userName = isMyActivity ? (user?.email?.split('@')[0] || 'Moi') : 'Équipier';
+
   const handleDelete = (e: any) => {
-    e.preventDefault(); // Empêche la navigation
+    e.preventDefault();
     
     if (Platform.OS === 'web') {
-      if (confirm("Êtes-vous sûr de vouloir supprimer cette activité ?")) {
+      if (confirm("Supprimer cette activité ?")) {
         onDelete(activityId);
       }
     } else {
       Alert.alert(
         "Supprimer l'activité",
-        "Êtes-vous sûr de vouloir supprimer cette activité ?",
+        "Êtes-vous sûr ?",
         [
           { text: "Annuler", style: "cancel" },
           { text: "Supprimer", style: "destructive", onPress: () => onDelete(activityId) },
@@ -36,7 +47,6 @@ export const ActivityItem: React.FC<ActivityItemProps> = ({ activity, onDelete }
     }
   };
 
-  // Construction des détails à afficher
   const renderDetails = () => {
     const details: string[] = [activityFormatters.formatDuration(activity.duration)];
     
@@ -66,20 +76,38 @@ export const ActivityItem: React.FC<ActivityItemProps> = ({ activity, onDelete }
   return (
     <Link href={`/activities/${activityId}`} asChild>
       <Pressable>
-        <View style={styles.container}>
-        {config.iconFamily === 'MaterialCommunityIcons' ? (
-          <MaterialCommunityIcons name={config.icon as any} size={28} color="#ffd700" style={styles.icon} />
-        ) : (
-          <Ionicons name={config.icon as any} size={28} color="#ffd700" style={styles.icon} />
-        )}
+        <LinearGradient
+          colors={theme.gradients.card}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[
+            styles.container,
+            { borderLeftColor: userColor, borderLeftWidth: 3 }
+          ]}
+        >
+          {/* Icône */}
+          <View style={[styles.activityIcon, { backgroundColor: `${userColor}25` }]}>
+            <Ionicons 
+              name={config.icon as any} 
+              size={24} 
+              color={userColor} 
+            />
+          </View>
+
+          {/* Détails */}
           <View style={styles.detailsContainer}>
-            <Text style={styles.title}>{activity.title}</Text>
-            <Text style={styles.details}>
-              {renderDetails()}
-            </Text>
-            <Text style={styles.dateTime}>
-              {date} à {time}
-            </Text>
+            <View style={styles.header}>
+              <Text style={styles.title}>{activity.title}</Text>
+              <View style={[styles.userBadge, { backgroundColor: `${userColor}40` }]}>
+                <Text style={[styles.badgeText, { color: userColor }]}>
+                  {userName.toUpperCase()}
+                </Text>
+              </View>
+            </View>
+            
+            <Text style={styles.details}>{renderDetails()}</Text>
+            <Text style={styles.dateTime}>{date} à {time}</Text>
+            
             {activity.exercises && activity.exercises.length > 0 && (
               <Text style={styles.exercises}>
                 {activity.exercises.slice(0, 2).map(ex => ex.name).join(', ')}
@@ -87,13 +115,15 @@ export const ActivityItem: React.FC<ActivityItemProps> = ({ activity, onDelete }
               </Text>
             )}
           </View>
+
+          {/* Bouton supprimer */}
           <TouchableOpacity
             onPress={handleDelete}
             style={styles.deleteButton}
           >
-            <Ionicons name="trash-outline" size={24} color="#ff6b6b" />
+            <Ionicons name="trash-outline" size={18} color="#FF6B6B" />
           </TouchableOpacity>
-        </View>
+        </LinearGradient>
       </Pressable>
     </Link>
   );
@@ -103,41 +133,70 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1e1e1e',
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 10,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    gap: 14,
   },
-  icon: {
-    marginRight: 15,
+  activityIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   detailsContainer: {
     flex: 1,
   },
-  title: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     marginBottom: 4,
   },
+  title: {
+    color: theme.colors.text.primary,
+    fontSize: 15,
+    fontWeight: '600',
+    flex: 1,
+  },
+  userBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  badgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
   details: {
-    color: '#aaa',
-    fontSize: 14,
+    color: theme.colors.text.secondary,
+    fontSize: 13,
     marginTop: 2,
+    fontWeight: '500',
   },
   dateTime: {
-    color: '#888',
-    fontSize: 13,
+    color: theme.colors.text.tertiary,
+    fontSize: 11,
     marginTop: 4,
   },
   exercises: {
-    color: '#999',
-    fontSize: 12,
+    color: theme.colors.text.tertiary,
+    fontSize: 11,
     marginTop: 4,
     fontStyle: 'italic',
   },
   deleteButton: {
-    marginLeft: 10,
-    padding: 5,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 107, 107, 0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

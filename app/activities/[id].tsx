@@ -1,5 +1,6 @@
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { View, Text, StyleSheet, ActivityIndicator, ScrollView, TouchableOpacity, SafeAreaView } from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator, ScrollView, TouchableOpacity } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useActivities } from "../../context/ActivityContext";
 import { activityConfig } from "../../utils/activityConfig";
@@ -21,7 +22,7 @@ export default function ActivityDetailScreen() {
 
   if (!activity) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView edges={['top']} style={styles.container}>
         <Stack.Screen options={{ title: "Chargement..." }} />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#ffd700" />
@@ -48,7 +49,7 @@ export default function ActivityDetailScreen() {
     : Ionicons;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['top']} style={styles.container}>
       <Stack.Screen 
         options={{ 
           title: "Détails",

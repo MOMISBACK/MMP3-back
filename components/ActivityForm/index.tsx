@@ -10,6 +10,7 @@ import {
   ScrollView,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
+import { Ionicons } from '@expo/vector-icons';
 import { Activity } from "../../types/Activity";
 import { useActivities } from "../../context/ActivityContext";
 import { activityConfig } from "../../utils/activityConfig";
@@ -22,10 +23,6 @@ interface ActivityFormProps {
   onClose: () => void;
 }
 
-/**
- * Formulaire d'ajout d'activité manuelle
- * Utilise une architecture modulaire avec hooks et sous-composants
- */
 export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
   const { addActivity } = useActivities();
   
@@ -71,7 +68,6 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
         date: activityDate.toISOString(),
       };
 
-      // Champs conditionnels basés sur le type d'activité
       if (config.fields.includes("distance") && distance) {
         activityData.distance = parseFloat(distance);
       }
@@ -95,16 +91,12 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
       resetForm();
     } catch (error) {
       console.error("Failed to add activity:", error);
-      // TODO: Ajouter un toast/notification d'erreur
     } finally {
       setIsSubmitting(false);
       onClose();
     }
   };
 
-  /**
-   * Affiche les champs dynamiques en fonction du type d'activité
-   */
   const renderDynamicFields = () => {
     const fields = activityConfig[type].fields;
     
@@ -163,26 +155,36 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
         onTimeChange={updateActivityTime}
       />
 
-      <View
-        style={[
-          styles.pickerContainer,
-          Platform.OS === "web" && styles.pickerContainerWeb,
-        ]}
-      >
-        <Picker
-          selectedValue={type}
-          onValueChange={setType}
-          style={Platform.OS === "web" ? styles.pickerWeb : styles.picker}
-          itemStyle={styles.pickerItem}
-        >
+      {/* ⭐ NOUVEAU : Sélecteur de type custom */}
+      <View style={styles.typeSelector}>
+        <Text style={styles.typeSelectorLabel}>Type d'activité</Text>
+        <View style={styles.typesGrid}>
           {Object.entries(activityConfig).map(([key, config]) => (
-            <Picker.Item
+            <TouchableOpacity
               key={key}
-              label={config.label}
-              value={key}
-            />
+              style={[
+                styles.typeButton,
+                type === key && styles.typeButtonSelected
+              ]}
+              onPress={() => setType(key as any)}
+            >
+              <Ionicons 
+                name={config.icon as any} 
+                size={24} 
+                color={type === key ? config.color : '#666'} 
+              />
+              <Text style={[
+                styles.typeButtonText,
+                type === key && styles.typeButtonTextSelected
+              ]}>
+                {config.label}
+              </Text>
+              {type === key && (
+                <Ionicons name="checkmark-circle" size={20} color={config.color} />
+              )}
+            </TouchableOpacity>
           ))}
-        </Picker>
+        </View>
       </View>
 
       {/* Sélecteurs d'heures et minutes */}
@@ -216,7 +218,6 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({ onClose }) => {
           </View>
         </View>
         
-        {/* Aperçu du temps total */}
         {(parseInt(hours) > 0 || parseInt(minutes) > 0) && (
           <Text style={styles.durationPreview}>
             Total : {activityFormatters.formatDuration(parseInt(hours) * 60 + parseInt(minutes))}
@@ -270,28 +271,44 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     fontSize: 16,
   },
-  pickerContainer: {
-    backgroundColor: "#333",
-    borderRadius: 8,
+  
+  // ⭐ NOUVEAUX STYLES : Sélecteur de type
+  typeSelector: {
     marginBottom: 16,
-    justifyContent: "center",
   },
-  pickerContainerWeb: {
-    height: 50,
+  typeSelectorLabel: {
+    color: '#aaa',
+    fontSize: 14,
+    marginBottom: 12,
   },
-  picker: {
-    color: "#fff",
+  typesGrid: {
+    gap: 10,
   },
-  pickerWeb: {
-    height: "100%",
-    backgroundColor: "transparent",
-    borderWidth: 0,
-    color: "#fff",
+  typeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#333',
+    padding: 14,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#333',
   },
-  pickerItem: {
-    color: "#fff",
-    backgroundColor: "#333",
+  typeButtonSelected: {
+    borderColor: '#ffd700',
+    backgroundColor: 'rgba(255, 215, 0, 0.05)',
   },
+  typeButtonText: {
+    flex: 1,
+    color: '#888',
+    fontSize: 15,
+  },
+  typeButtonTextSelected: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  
+  // Styles existants
   durationContainer: {
     marginBottom: 16,
   },
@@ -311,6 +328,10 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   durationPicker: {
+    color: "#fff",
+    backgroundColor: "#333",
+  },
+  pickerItem: {
     color: "#fff",
     backgroundColor: "#333",
   },

@@ -1,141 +1,124 @@
 // context/ChallengeContext.tsx
 
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { WeeklyChallenge, ChallengeSuggestion, CreateChallengeData } from '../types/Challenge';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { challengeService } from '../services/challengeService';
+import type { Challenge, CreateChallengeData, UpdateChallengeData } from '../types/Challenge';
 import { useAuth } from './AuthContext';
 
 interface ChallengeContextType {
-  currentChallenge: WeeklyChallenge | null;
-  suggestions: ChallengeSuggestion[];
+  currentChallenge: Challenge | null;
   loading: boolean;
   error: string | null;
   createChallenge: (data: CreateChallengeData) => Promise<void>;
-  updateChallenge: (data: Partial<CreateChallengeData>) => Promise<void>;
+  updateChallenge: (data: UpdateChallengeData) => Promise<void>;
   deleteChallenge: () => Promise<void>;
   refreshChallenge: () => Promise<void>;
-  loadSuggestions: () => Promise<void>;
+  clearError: () => void;
 }
 
 const ChallengeContext = createContext<ChallengeContextType | undefined>(undefined);
 
-export function ChallengeProvider({ children }: { children: ReactNode }) {
-  const { token, user } = useAuth();
-  const [currentChallenge, setCurrentChallenge] = useState<WeeklyChallenge | null>(null);
-  const [suggestions, setSuggestions] = useState<ChallengeSuggestion[]>([]);
-  const [loading, setLoading] = useState(false);
+export const ChallengeProvider = ({ children }: { children: ReactNode }) => {
+  const { isAuthenticated } = useAuth();
+  const [currentChallenge, setCurrentChallenge] = useState<Challenge | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // ⭐ CORRECTION : Utiliser useCallback pour stabiliser la fonction
-  const refreshChallenge = useCallback(async () => {
-    if (!token) return;
-    
+  const loadChallenge = async () => {
+    if (!isAuthenticated) {
+      setCurrentChallenge(null);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
-      setError(null);
-      const challenge = await challengeService.getCurrentChallenge(token);
+      const challenge = await challengeService.getCurrentChallenge();
       setCurrentChallenge(challenge);
     } catch (err: any) {
-      console.error('Erreur refreshChallenge:', err);
-      setError(err.message || 'Erreur lors du chargement du défi');
+      console.error('Erreur chargement challenge:', err);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [token]); // ⭐ Dépendance : token
+  };
 
-  // ⭐ CORRECTION : Utiliser useCallback
-  const loadSuggestions = useCallback(async () => {
-    if (!token) return;
-    
-    try {
-      const sug = await challengeService.getSuggestions(token);
-      setSuggestions(sug);
-    } catch (err: any) {
-      console.error('Erreur loadSuggestions:', err);
-    }
-  }, [token]); // ⭐ Dépendance : token
-
-  // ⭐ CORRECTION : Maintenant refreshChallenge est stable
   useEffect(() => {
-    if (token && user) {
-      refreshChallenge();
-    }
-  }, [token, user, refreshChallenge]); // ⭐ Dépendances complètes
+    loadChallenge();
+  }, [isAuthenticated]);
 
-  // ⭐ CORRECTION : Utiliser useCallback
-  const createChallenge = useCallback(async (data: CreateChallengeData) => {
-    if (!token) throw new Error('Non authentifié');
-    
+  const createChallenge = async (data: CreateChallengeData) => {
     try {
       setLoading(true);
-      setError(null);
-      const newChallenge = await challengeService.createChallenge(data, token);
+      const newChallenge = await challengeService.createChallenge(data);
       setCurrentChallenge(newChallenge);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Erreur lors de la création');
+      setError(err.message);
       throw err;
     } finally {
       setLoading(false);
     }
-  }, [token]); // ⭐ Dépendance : token
+  };
 
-  // ⭐ CORRECTION : Utiliser useCallback
-  const updateChallenge = useCallback(async (data: Partial<CreateChallengeData>) => {
-    if (!token) throw new Error('Non authentifié');
-    
+  const updateChallenge = async (data: UpdateChallengeData) => {
     try {
       setLoading(true);
-      setError(null);
-      const updated = await challengeService.updateChallenge(data, token);
+      const updated = await challengeService.updateChallenge(data);
       setCurrentChallenge(updated);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Erreur lors de la modification');
+      setError(err.message);
       throw err;
     } finally {
       setLoading(false);
     }
-  }, [token]); // ⭐ Dépendance : token
+  };
 
-  // ⭐ CORRECTION : Utiliser useCallback
-  const deleteChallenge = useCallback(async () => {
-    if (!token) throw new Error('Non authentifié');
-    
+  const deleteChallenge = async () => {
     try {
       setLoading(true);
-      setError(null);
-      await challengeService.deleteChallenge(token);
+      await challengeService.deleteChallenge();
       setCurrentChallenge(null);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Erreur lors de la suppression');
+      setError(err.message);
       throw err;
     } finally {
       setLoading(false);
     }
-  }, [token]); // ⭐ Dépendance : token
+  };
+
+  const refreshChallenge = async () => {
+    try {
+      const refreshed = await challengeService.refreshProgress();
+      setCurrentChallenge(refreshed);
+    } catch (err: any) {
+      console.error('Erreur refresh:', err);
+    }
+  };
+
+  const clearError = () => setError(null);
 
   return (
     <ChallengeContext.Provider
       value={{
         currentChallenge,
-        suggestions,
         loading,
         error,
         createChallenge,
         updateChallenge,
         deleteChallenge,
         refreshChallenge,
-        loadSuggestions
+        clearError,
       }}
     >
       {children}
     </ChallengeContext.Provider>
   );
-}
+};
 
-export function useChallenge() {
+export const useChallenge = () => {
   const context = useContext(ChallengeContext);
   if (!context) {
-    throw new Error('useChallenge doit être utilisé dans ChallengeProvider');
+    throw new Error('useChallenge must be used within ChallengeProvider');
   }
   return context;
-}
+};
