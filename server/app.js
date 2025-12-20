@@ -19,8 +19,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Connexion DB
-connectDB();
 
 // Routes
 app.use('/api/auth', authRoutes);

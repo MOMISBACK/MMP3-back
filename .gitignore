@@ -6,6 +6,9 @@ yarn-error.log
 # Expo
 .expo/
 dist/
+
+# Binaries
+server/mongodb-binaries/
 npm_output.log
 
 # Secrets
