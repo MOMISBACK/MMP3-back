@@ -1,31 +1,22 @@
-const express = require('express');
-const dotenv = require('dotenv');
-const cors = require('cors');
-const connectDB = require('./config/db');
-const { errorHandler } = require('./middleware/errorMiddleware');
+// server/server.js
 
-dotenv.config();
+const app = require('./app');
 
-connectDB();
+const port = process.env.PORT || 5000;
 
-const app = express();
-const port = process.env.PORT || 3000;
-
-app.use(cors());
-app.use(express.json());
-
-app.get('/', (req, res) => {
-  res.send('Hello World!');
+const server = app.listen(port, () => {
+  console.log(`✅ Serveur démarré sur le port ${port}`);
+  console.log(`🌍 Environnement: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🔗 URL: http://localhost:${port}`);
 });
 
-app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/users', require('./routes/userRoutes'));
-app.use('/api/activities', require('./routes/activityRoutes'));
-app.use('/api/challenges', require('./routes/challenges'));
-
-// Error Handler Middleware
-app.use(errorHandler);
-
-app.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
+// Gestion arrêt propre
+process.on('SIGTERM', () => {
+  console.log('SIGTERM reçu, arrêt du serveur...');
+  server.close(() => {
+    console.log('Serveur arrêté');
+    process.exit(0);
+  });
 });
+
+module.exports = server;
