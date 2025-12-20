@@ -76,24 +76,37 @@ export function ActivityProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    // Optimistic update: Add activity to state immediately
+    const tempId = `temp-${Date.now()}`;
+    const newActivity: Activity = {
+      ...activityData,
+      _id: tempId,
+      id: tempId, // Keep both for compatibility
+      user: user!._id,
+      date: new Date(activityData.date).toISOString(),
+    };
+    setActivities(prev => [newActivity, ...prev]);
+
     try {
-      const completeActivityData = {
-        ...activityData,
-        userId: user?._id,   
-        source: 'manual',              
-      };
+      // Send data to the server
+      const savedActivity = await activityService.addActivity(activityData, token);
       
-      // ⚠️ CORRECTION - Utiliser completeActivityData au lieu de activityData
-      await activityService.addActivity(completeActivityData, token);
-      await loadActivities();
+      // Replace the temporary activity with the real one from the server
+      setActivities(prev =>
+        prev.map(a => (a._id === tempId ? savedActivity : a))
+      );
       
-      // ⭐ AJOUTER - Rafraîchir le défi après ajout d'activité
       if (refreshChallenge) {
         await refreshChallenge();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to save activity", error);
-      setError("Impossible d'ajouter l'activité. Veuillez réessayer.");
+      // Rollback the optimistic update on error
+      setActivities(prev => prev.filter(a => a._id !== tempId));
+
+      // Set a more specific error message from the backend response
+      const errorMessage = error.response?.data?.message || "Impossible d'ajouter l'activité. Veuillez réessayer.";
+      setError(errorMessage);
     }
   };
 
